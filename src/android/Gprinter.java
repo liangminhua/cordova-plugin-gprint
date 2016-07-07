@@ -1,4 +1,4 @@
-package cordova-plugin-gprint;
+package cordova.plugin.gprint;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
