@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="cordova-plugin-gprint" version="0.0.17" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="cordova-plugin-gprint" version="0.0.22" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
   <name>Gprinter</name>
   <description>Cordova Gprinter(Bluetooth-printer) Plugin</description>
   <author>BEN</author>
   <license>Apache 2.0 License</license>
   <js-module name="Gprinter" src="www/Gprinter.js">
-    <clobbers target="Gprinter" />
+    <clobbers target="gprinter" />
   </js-module>
   <platform name="android">
     <config-file parent="/*" target="res/xml/config.xml">

@@ -21,24 +21,33 @@ import org.json.JSONException;
  */
 public class Gprinter extends CordovaPlugin {
     private GpService mGpService = null;
-    private PrinterServiceConnection printerServiceConnection = null;
-
+    private PrinterServiceConnection conn = null;
     class PrinterServiceConnection implements ServiceConnection {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.i("ServiceConnection", "onServiceDisconnected() called");
             mGpService = null;
         }
-
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mGpService = GpService.Stub.asInterface(service);
-            if (mGpService != null)
-                try {
-                    mGpService.isUserExperience(true);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
+            mGpService =GpService.Stub.asInterface(service);
+        }
+    };
+    private void connection() {
+        conn = new PrinterServiceConnection();
+        Intent intent =new Intent(cordova.getActivity(), GpPrintService.class);
+         Context applicationContext = cordova.getActivity().getApplicationContext();
+        applicationContext.bindService(intent, conn, Context.BIND_AUTO_CREATE); // bindService
+    }
+
+    private void startService() {
+        Intent intent= new Intent(cordova.getActivity(), GpPrintService.class);
+         Context applicationContext = cordova.getActivity().getApplicationContext();
+        applicationContext.startService(intent);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -58,15 +67,8 @@ public class Gprinter extends CordovaPlugin {
     }
 
     private void initService(CallbackContext callbackContext) {
-        try {
-            Context context = this.cordova.getActivity().getApplicationContext();
-            printerServiceConnection = new PrinterServiceConnection();
-            Intent intent = new Intent(cordova.getActivity(), GpPrintService.class);
-            context.bindService(intent, printerServiceConnection, Context.BIND_AUTO_CREATE);
-            callbackContext.success("InitSuccess");
-        } catch (Exception e) {
-            callbackContext.error("InitError");
-        }
+        startService();
+        connection();
     }
 
     private void openPort() {
@@ -80,6 +82,11 @@ public class Gprinter extends CordovaPlugin {
     }
 
     private void printTestPage(CallbackContext callbackContext) {
-
+            try {
+                mGpService.printeTestPage(0);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        callbackContext.success("haoxiangchenggong");
     }
 }
