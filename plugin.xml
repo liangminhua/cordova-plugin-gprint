@@ -1,57 +1,58 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="cordova-plugin-gprint" version="0.0.15" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
-    <name>Gprinter</name>
-    <description>Cordova Gprinter(Bluetooth-printer) Plugin</description>
-    <author>BEN</author>
-    <license>Apache 2.0 License</license>
-    <js-module name="Gprinter" src="www/Gprinter.js">
-        <clobbers target="Gprinter" />
-    </js-module>
-    <platform name="android">
-        <config-file parent="/*" target="res/xml/config.xml">
-            <feature name="Gprinter">
-                <param name="android-package" value="cordova.plugin.gprint.Gprinter" />
-            </feature>
-        </config-file>
-        <config-file parent="/*" target="AndroidManifest.xml" />
-        <source-file src="src/android/Gprinter.java" target-dir="src/cordova/plugin/gprint" />
-        <lib-file src="src/android/libs/gprintersdkv22.jar" arch="device" />
-        <source-file src="src/android/jni/armeabi/libgpequipment.so" target-dir="libs/armeabi/"></source-file>
-        <source-file src="src/android/jni/armeabi-v7a/libgpequipment.so" target-dir="libs/armeabi-v7a/"></source-file>
-        <source-file src="src/android/jni/x86/libgpequipment.so" target-dir="libs/x86/"></source-file>
-        <source-file src="src/android/aidl/com/gprinter/aidl/GpService.aidl" target-dir="src/com/gprinter/aidl/" />
-        <config-file target="AndroidManifest.xml" parent="/*">
-            <service android:name="com.gprinter.service.GpPrintService" android:enabled="true" android:exported="true" android:label="GpPrintService">
-                <intent-filter>
-                    <action android:name="com.gprinter.aidl.GpPrintService" />
-                </intent-filter>
-            </service>
-            <service android:name="com.gprinter.service.AllService">
-            </service>
-            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-            <uses-permission android:name="android.permission.INTERNET" />
-            <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-            <uses-permission android:name="android.permission.BLUETOOTH" />
-            <uses-permission android:name="android.hardware.usb.accessory" />
-            <uses-permission android:name="android.permission.WAKE_LOCK" />
-            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
-            <uses-permission android:name="android.permission.GET_TASKS" />
-            <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-            <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-            <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-        </config-file>
-    </platform>
-    <platform name="ios">
-        <config-file parent="/*" target="config.xml">
-            <feature name="Gprinter">
-                <param name="ios-package" value="Gprinter" />
-            </feature>
-        </config-file>
-        <source-file src="src/ios/Gprinter.m" />
-    </platform>
+<plugin id="cordova-plugin-gprint" version="0.0.17" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+  <name>Gprinter</name>
+  <description>Cordova Gprinter(Bluetooth-printer) Plugin</description>
+  <author>BEN</author>
+  <license>Apache 2.0 License</license>
+  <js-module name="Gprinter" src="www/Gprinter.js">
+    <clobbers target="Gprinter" />
+  </js-module>
+  <platform name="android">
+    <config-file parent="/*" target="res/xml/config.xml">
+      <feature name="Gprinter">
+        <param name="android-package" value="cordova.plugin.gprint.Gprinter" />
+      </feature>
+    </config-file>
+    <config-file parent="/manifest/application" target="AndroidManifest.xml">
+      <service android:name="com.gprinter.service.GpPrintService" android:enabled="true" android:exported="true" android:label="GpPrintService">
+        <intent-filter>
+          <action android:name="com.gprinter.aidl.GpPrintService" />
+        </intent-filter>
+      </service>
+      <service android:name="com.gprinter.service.AllService">
+      </service>
+    </config-file>
+    <config-file parent="/*" target="AndroidManifest.xml">
+      <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+      <uses-permission android:name="android.permission.INTERNET" />
+      <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+      <uses-permission android:name="android.permission.BLUETOOTH" />
+      <uses-permission android:name="android.hardware.usb.accessory" />
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+      <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
+      <uses-permission android:name="android.permission.GET_TASKS" />
+      <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+      <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+      <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+      <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    </config-file>
+    <source-file src="src/android/Gprinter.java" target-dir="src/cordova/plugin/gprint" />
+    <source-file src="src/android/libs/gprintersdkv22.jar" target-dir="libs"/>
+    <source-file src="src/android/jni/armeabi/libgpequipment.so" target-dir="libs/armeabi/"/>
+    <source-file src="src/android/jni/armeabi-v7a/libgpequipment.so" target-dir="libs/armeabi-v7a/"/>
+    <source-file src="src/android/jni/x86/libgpequipment.so" target-dir="libs/x86/"/>
+    <source-file src="src/android/aidl/GpService.aidl" target-dir="src/com/gprinter/aidl"/>
+  </platform>
+  <platform name="ios">
+    <config-file parent="/*" target="config.xml">
+      <feature name="Gprinter">
+        <param name="ios-package" value="Gprinter" />
+      </feature>
+    </config-file>
+    <source-file src="src/ios/Gprinter.m" />
+  </platform>
 </plugin>
