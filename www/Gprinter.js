@@ -4,7 +4,7 @@ cordova.define("cordova-plugin-gprint.Gprinter", function (require, exports, mod
     var bluetoothleName = "BluetoothLePlugin";
     var gprinter = {
         initService: function (success, error) {
-            alert("initService4");
+            alert("initService");
             cordova.exec(success, success, gprinterName, "initService", []);
         },
         stopService: function (success, error) {
