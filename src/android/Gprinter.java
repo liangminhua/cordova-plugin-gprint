@@ -8,8 +8,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Base64;
 
 import com.gprinter.aidl.GpService;
+import com.gprinter.command.EscCommand;
 import com.gprinter.io.GpDevice;
 import com.gprinter.service.GpPrintService;
 
@@ -18,6 +20,8 @@ import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Vector;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -31,9 +35,12 @@ public class Gprinter extends CordovaPlugin {
     private static final String PORT_NUMBER = "portNumber";
     private static final String TIME_OUT = "timeOut";
     private static final String BASE64 = "base64";
+    private static final String FUCTION_NAME = "functionName";
+    private static final String TEXT = "text";
+    private static final String CHARSETNAME = "charsetName";
     private GpService gpService = null;
     private PrinterServiceConnection printerServiceConnection = null;
-    private CallbackContext callbackContext ;
+    private CallbackContext callbackContext;
 
     class PrinterServiceConnection implements ServiceConnection {
         @Override
@@ -101,6 +108,8 @@ public class Gprinter extends CordovaPlugin {
                     Thread.sleep(1000);
                     context.bindService(intent, printerServiceConnection, Context.BIND_AUTO_CREATE);
                     callbackContext.success();
+
+
                 } catch (Exception e) {
                     callbackContext.error(e.getMessage());
                 }
@@ -269,6 +278,264 @@ public class Gprinter extends CordovaPlugin {
             callbackContext.error("please initService first!");
     }
 
+    private String generateEscCommand(final JSONArray args) {
+        EscCommand escCommand = new EscCommand();
+        try {
+            for (int i = 0; i < args.length(); ++i) {
+                JSONObject jsonObject = args.getJSONObject(i);
+                String functionName = jsonObject.getString(FUCTION_NAME);
+                if ("addHorTab".equals(functionName)) {
+                    escCommand.addHorTab();
+                }
+                if ("addText".equals(functionName)) {
+                    String text = jsonObject.getString(TEXT);
+                    String charsetName = jsonObject.optString(CHARSETNAME, null);
+                    escCommand.addText(text, charsetName);
+                }
+                if ("addSound".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    int t = jsonObject.getInt("t");
+                    escCommand.addSound((byte) n, (byte) t);
+                }
+                if ("addCancelKanjiMode".equals(functionName)) {
+                    escCommand.addCancelKanjiMode();
+                }
+                if ("addSetKanjiLefttandRightSpace".equals(functionName)) {
+                    int left = jsonObject.getInt("left");
+                    int right = jsonObject.getInt("right");
+                    escCommand.addSetKanjiLefttandRightSpace((byte) left, (byte) right);
+                }
+                if ("addSetQuadrupleModeForKanji".equals(functionName)) {
+                    boolean enable = jsonObject.getBoolean("enable");
+                    if (enable)
+                        escCommand.addSetQuadrupleModeForKanji(EscCommand.ENABLE.ON);
+                    else
+                        escCommand.addSetQuadrupleModeForKanji(EscCommand.ENABLE.OFF);
+                }
+                if ("addRastBitImage".equals(functionName)) {
+
+                }
+                if ("addDownloadNvBitImage".equals(functionName)) {
+
+                }
+                if ("addPrintNvBitmap".equals(functionName)) {
+
+                }
+                if ("addUPCA".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addUPCA(content);
+                }
+                if ("addUPCE".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addUPCE(content);
+                }
+                if ("addEAN13".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addEAN13(content);
+                }
+                if ("addEAN8".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addEAN8(content);
+                }
+                if ("addCODE39".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addCODE39(content);
+                }
+                if ("addCODE93".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addCODE93(content);
+                }
+                if ("addCODE128".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addCODE128(content);
+                }
+                if ("addEAN13".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addEAN13(content);
+                }
+                if ("addITF".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addITF(content);
+                }
+                if ("addPrintAndLineFeed".equals(functionName)) {
+                    escCommand.addPrintAndLineFeed();
+                }
+                if ("addPrintAndFeedLines".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addPrintAndFeedLines((byte) n);
+                }
+                if ("addSetRightSideCharacterSpacing".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addSetRightSideCharacterSpacing((byte) n);
+                }
+                if ("addSelectPrintModes".equals(functionName)) {
+                    //escCommand.addSelectPrintModes();
+                }
+                if ("addSetAbsolutePrintPosition".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addSetAbsolutePrintPosition((short) n);
+                }
+                if ("addTurnUnderlineModeOnOrOff".equals(functionName)) {
+                    String underline = jsonObject.getString("underline");
+                    EscCommand.UNDERLINE_MODE underlineMode = EscCommand.UNDERLINE_MODE.valueOf(underline);
+                    escCommand.addTurnUnderlineModeOnOrOff(underlineMode);
+                }
+                if ("addSelectDefualtLineSpacing ".equals(functionName)) {
+                    escCommand.addSelectDefualtLineSpacing();
+                }
+                if ("addSetLineSpacing".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addSetLineSpacing((byte) n);
+                }
+                if ("addInitializePrinter".equals(functionName)) {
+                    escCommand.addInitializePrinter();
+                }
+                if ("addTurnEmphasizedModeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                    escCommand.addTurnEmphasizedModeOnOrOff(enable);
+                }
+                if ("addTurnDoubleStrikeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                    escCommand.addTurnDoubleStrikeOnOrOff(enable);
+                }
+                if ("addPrintAndFeedPaper".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addPrintAndFeedPaper((byte) n);
+                }
+                if ("addSelectCharacterFont".equals(functionName)) {
+                    EscCommand.FONT font = EscCommand.FONT.valueOf(jsonObject.getString("font"));
+                    escCommand.addSelectCharacterFont(font);
+                }
+                if ("addSelectInternationalCharacterSet".equals(functionName)) {
+                    EscCommand.CHARACTER_SET character_set = EscCommand.CHARACTER_SET.valueOf(jsonObject.getString("charset"));
+                    escCommand.addSelectInternationalCharacterSet(character_set);
+                }
+                if ("addTurn90ClockWiseRotatin".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                    escCommand.addTurn90ClockWiseRotatin(enable);
+                }
+                if ("addSetRelativePrintPositon".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addSetRelativePrintPositon((short) n);
+                }
+                if ("addSelectJustification".equals(functionName)) {
+                    EscCommand.JUSTIFICATION justification = EscCommand.JUSTIFICATION.valueOf(jsonObject.getString("justification"));
+                    escCommand.addSelectJustification(justification);
+
+                }
+                if ("addSelectCodePage".equals(functionName)) {
+                    EscCommand.CODEPAGE codepage = EscCommand.CODEPAGE.valueOf(jsonObject.getString("codepage"));
+                    escCommand.addSelectCodePage(codepage);
+                }
+                if ("addTurnUpsideDownModeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                    escCommand.addTurnUpsideDownModeOnOrOff(enable);
+                }
+                if ("addSetCharcterSize".equals(functionName)) {
+                    String width = jsonObject.getString("width");
+                    String height = jsonObject.getString("height");
+                    EscCommand.WIDTH_ZOOM width_zoom = EscCommand.WIDTH_ZOOM.valueOf(width);
+                    EscCommand.HEIGHT_ZOOM height_zoom = EscCommand.HEIGHT_ZOOM.valueOf(height);
+                    escCommand.addSetCharcterSize(width_zoom, height_zoom);
+                }
+                if ("addTurnReverseModeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                    escCommand.addTurnReverseModeOnOrOff(enable);
+                }
+                if ("addSelectPrintingPositionForHRICharacters".equals(functionName)) {
+                    String _hri_position = jsonObject.getString("HRI_POSITION");
+                    EscCommand.HRI_POSITION hri_position = EscCommand.HRI_POSITION.valueOf(_hri_position);
+                    escCommand.addSelectPrintingPositionForHRICharacters(hri_position);
+                }
+                if ("addSetLeftMargin".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addSetLeftMargin((short) n);
+                }
+                if ("addSetHorAndVerMotionUnits".equals(functionName)) {
+                    int x = jsonObject.getInt("x");
+                    int y = jsonObject.getInt("y");
+                    escCommand.addSetHorAndVerMotionUnits((byte) x, (byte) y);
+                }
+                if ("addCutAndFeedPaper".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addCutAndFeedPaper((byte) n);
+                }
+                if ("addCutPaper".equals(functionName)) {
+                    escCommand.addCutPaper();
+                }
+                if ("addSetPrintingAreaWidth".equals(functionName)) {
+                    int length = jsonObject.getInt("length");
+                    escCommand.addSetPrintingAreaWidth((short) length);
+                }
+                if ("addSelectKanjiMode".equals(functionName)) {
+                    escCommand.addSelectKanjiMode();
+                }
+                if ("addSetKanjiUnderLine".equals(functionName)) {
+                    EscCommand.UNDERLINE_MODE underline_mode = EscCommand.UNDERLINE_MODE.valueOf(jsonObject.getString("UNDERLINE_MODE"));
+                    escCommand.addSetKanjiUnderLine(underline_mode);
+                }
+                if ("addCancelKanjiMode".equals(functionName)) {
+                    escCommand.addCancelKanjiMode();
+                }
+                if ("addSetKanjiLeftAndRightSpacing".equals(functionName)) {
+                    int left = jsonObject.getInt("left");
+                    int right = jsonObject.getInt("right");
+                    escCommand.addSetKanjiLefttandRightSpace((byte) left, (byte) right);
+                }
+                if ("addSetQuadrupleModeForKanji".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                    escCommand.addSetQuadrupleModeForKanji(enable);
+                }
+                if ("addSetFontForHRICharacter".equals(functionName)) {
+                    EscCommand.FONT font = EscCommand.FONT.valueOf(jsonObject.getString("font"));
+                    escCommand.addSetFontForHRICharacter(font);
+                }
+                if ("addSetBarcodeHeight".equals(functionName)) {
+                    int width = jsonObject.getInt("width");
+                    escCommand.addSetLeftMargin((byte) width);
+                }
+                if ("addSetBarcodeWidth".equals(functionName)) {
+                    int height = jsonObject.getInt("height");
+                    escCommand.addSetLeftMargin((byte) height);
+                }
+//QRCODE
+                if ("addSelectSizeOfModuleForQRCode".equals(functionName)) {
+                    int n = jsonObject.getInt("n");
+                    escCommand.addSelectSizeOfModuleForQRCode((byte) n);
+                }
+                if ("addSelectErrorCorrectionLevelForQRCode".equals(functionName)) {
+                    int n = jsonObject.getInt("height");
+                    escCommand.addSelectErrorCorrectionLevelForQRCode((byte) n);
+                }
+                if ("addStoreQRCodeData".equals(functionName)) {
+                    String content = jsonObject.getString("content");
+                    escCommand.addStoreQRCodeData(content);
+                }
+                if ("addPrintQRCode ".equals(functionName)) {
+                    int height = jsonObject.getInt("height");
+                    escCommand.addPrintQRCode ();
+                }
+                if ("addUserCommand".equals(functionName)){
+                    escCommand.addUserCommand();
+                }
+                //end QRCODE
+                if ("addCancelUserDefinedCharacters",equal(functionName)){
+                    int n = jsonObject.getInt("n");
+                    escCommand.addCancelUserDefinedCharacters((byte) n);
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Vector<Byte> Bytes = escCommand.getCommand();
+        byte[] bytes = new byte[Bytes.size()];
+        for (int i = 0; i < bytes.length; ++i) {
+            bytes[i] = Bytes.get(i);
+        }
+        String ret = Base64.encodeToString(bytes, Base64.DEFAULT);
+        return ret;
+    }
+
     private JSONObject getArgsObject(JSONArray args) {
         if (args.length() == 1) {
             try {
@@ -292,3 +559,4 @@ public class Gprinter extends CordovaPlugin {
         }
     }
 }
+
