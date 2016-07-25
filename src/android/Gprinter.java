@@ -38,6 +38,7 @@ public class Gprinter extends CordovaPlugin {
     private static final String FUCTION_NAME = "functionName";
     private static final String TEXT = "text";
     private static final String CHARSETNAME = "charsetName";
+    private static final String CONTENT ="content" ;
     private GpService gpService = null;
     private PrinterServiceConnection printerServiceConnection = null;
     private CallbackContext callbackContext;
@@ -311,11 +312,8 @@ public class Gprinter extends CordovaPlugin {
                     escCommand.addSetKanjiLefttandRightSpace((byte) left, (byte) right);
                 }
                 if ("addSetQuadrupleModeForKanji".equals(functionName)) {
-                    boolean enable = jsonObject.getBoolean("enable");
-                    if (enable)
-                        escCommand.addSetQuadrupleModeForKanji(EscCommand.ENABLE.ON);
-                    else
-                        escCommand.addSetQuadrupleModeForKanji(EscCommand.ENABLE.OFF);
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                    escCommand.addSetQuadrupleModeForKanji(enable);
                 }
                 if ("addRastBitImage".equals(functionName)) {
 
@@ -327,39 +325,39 @@ public class Gprinter extends CordovaPlugin {
 
                 }
                 if ("addUPCA".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addUPCA(content);
                 }
                 if ("addUPCE".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addUPCE(content);
                 }
                 if ("addEAN13".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addEAN13(content);
                 }
                 if ("addEAN8".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addEAN8(content);
                 }
                 if ("addCODE39".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addCODE39(content);
                 }
                 if ("addCODE93".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addCODE93(content);
                 }
                 if ("addCODE128".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addCODE128(content);
                 }
                 if ("addEAN13".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addEAN13(content);
                 }
                 if ("addITF".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addITF(content);
                 }
                 if ("addPrintAndLineFeed".equals(functionName)) {
@@ -374,7 +372,12 @@ public class Gprinter extends CordovaPlugin {
                     escCommand.addSetRightSideCharacterSpacing((byte) n);
                 }
                 if ("addSelectPrintModes".equals(functionName)) {
-                    //escCommand.addSelectPrintModes();
+                    EscCommand.FONT font = EscCommand.FONT.valueOf(jsonObject.getString("font"));
+                    EscCommand.ENABLE emphasized = EscCommand.ENABLE.valueOf(jsonObject.getString("emphasized"));
+                    EscCommand.ENABLE doubleheight = EscCommand.ENABLE.valueOf(jsonObject.getString("doubleheight"));
+                    EscCommand.ENABLE doublewidth = EscCommand.ENABLE.valueOf(jsonObject.getString("doublewidth"));
+                    EscCommand.ENABLE underline = EscCommand.ENABLE.valueOf(jsonObject.getString("underline"));
+                    escCommand.addSelectPrintModes(font,emphasized,doubleheight,doublewidth,underline);
                 }
                 if ("addSetAbsolutePrintPosition".equals(functionName)) {
                     int n = jsonObject.getInt("n");
@@ -513,11 +516,10 @@ public class Gprinter extends CordovaPlugin {
                     escCommand.addSelectErrorCorrectionLevelForQRCode((byte) n);
                 }
                 if ("addStoreQRCodeData".equals(functionName)) {
-                    String content = jsonObject.getString("content");
+                    String content = jsonObject.getString(CONTENT);
                     escCommand.addStoreQRCodeData(content);
                 }
                 if ("addPrintQRCode ".equals(functionName)) {
-                    int height = jsonObject.getInt("height");
                     escCommand.addPrintQRCode ();
                 }
                 if ("addUserCommand".equals(functionName)){
@@ -542,10 +544,13 @@ public class Gprinter extends CordovaPlugin {
             try {
                 return args.getJSONObject(0);
             } catch (JSONException ex) {
+                return null;
             }
+        }else {
+        return null;
+
         }
 
-        return null;
     }
 
     private void addProperty(JSONObject obj, String key, Object value) {
