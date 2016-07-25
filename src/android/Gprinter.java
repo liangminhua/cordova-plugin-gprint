@@ -85,6 +85,11 @@ public class Gprinter extends CordovaPlugin {
             getPrinterCommandType(args);
             return true;
         }
+        if (action.equals("getCommand"))
+        {
+            getCommand(args);
+            return true;
+        }
         if (action.equals("sendEscCommand")) {
             sendEscCommand(args);
             return true;
@@ -278,7 +283,7 @@ public class Gprinter extends CordovaPlugin {
             callbackContext.error("please initService first!");
     }
 
-    private String generateEscCommand(final JSONArray args) {
+    private void getCommand(final JSONArray args) {
         EscCommand escCommand = new EscCommand();
         try {
             for (int i = 0; i < args.length(); ++i) {
@@ -516,13 +521,9 @@ public class Gprinter extends CordovaPlugin {
                     escCommand.addPrintQRCode ();
                 }
                 if ("addUserCommand".equals(functionName)){
-                    escCommand.addUserCommand();
+//                    escCommand.addUserCommand();
                 }
                 //end QRCODE
-                if ("addCancelUserDefinedCharacters",equal(functionName)){
-                    int n = jsonObject.getInt("n");
-                    escCommand.addCancelUserDefinedCharacters((byte) n);
-                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -533,7 +534,7 @@ public class Gprinter extends CordovaPlugin {
             bytes[i] = Bytes.get(i);
         }
         String ret = Base64.encodeToString(bytes, Base64.DEFAULT);
-        return ret;
+        callbackContext.success(ret);
     }
 
     private JSONObject getArgsObject(JSONArray args) {

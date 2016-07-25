@@ -43,9 +43,13 @@ cordova.define("cordova-plugin-gprint.Gprinter", function (require, exports, mod
             alert("sendTscCommand");
             cordova.exec(success, error, gprinterName, "sendTscCommand", [params]);
         },
-        print:function(success,error,params){
-        alert("test");
-        cordova.exec(success,error,gprinterName,"test",[params]);
+        getCommand: function (success, error, params) {
+            alert('getCommand');
+            cordova.exec(success, error, gprinterName, "getCommand", params);
+        },
+        print: function (success, error, params) {
+            alert("test");
+            cordova.exec(success, error, gprinterName, "test", [params]);
         }
     }
     module.exports = gprinter;
