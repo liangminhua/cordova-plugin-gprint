@@ -34,10 +34,6 @@
         },
         getCommand: function (success, error, params) {
             cordova.exec(success, error, gprinterName, "getCommand", params);
-        },
-        print: function (success, error, params) {
-            alert("test");
-            cordova.exec(success, error, gprinterName, "test", [params]);
         }
     }
     module.exports = gprinter;
