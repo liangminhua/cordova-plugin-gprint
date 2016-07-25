@@ -1,4 +1,3 @@
-cordova.define("cordova-plugin-gprint.Gprinter", function (require, exports, module) {
     var exec = require('cordova/exec');
     var gprinterName = "Gprinter";
     var bluetoothleName = "BluetoothLePlugin";
@@ -53,4 +52,4 @@ cordova.define("cordova-plugin-gprint.Gprinter", function (require, exports, mod
         }
     }
     module.exports = gprinter;
-});
+
