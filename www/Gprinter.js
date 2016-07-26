@@ -1,4 +1,7 @@
+
     var exec = require('cordova/exec');
+    var channel = require('cordova/channel');
+    var utils = require('cordova/utils');
     var gprinterName = "Gprinter";
     var bluetoothleName = "BluetoothLePlugin";
     var gprinter = {
@@ -36,5 +39,25 @@
             cordova.exec(success, error, gprinterName, "getCommand", params);
         }
     }
+    channel.createSticky('onCordovaConnectionReady');
+    channel.waitForInitialization('onCordovaConnectionReady');
+    channel.onCordovaReady.subscribe(function () {
+        exec(function (params) {
+            if (params != "OK") {
+                cordova.fireDocumentEvent("printerConnect", params, false);
+            }
+            if (channel.onCordovaConnectionReady.state !== 2) {
+                channel.onCordovaConnectionReady.fire();
+            }
+        }, function (params) {
+            // If we can't get the network info we should still tell Cordova
+            // to fire the deviceready event.
+            if (channel.onCordovaConnectionReady.state !== 2) {
+                channel.onCordovaConnectionReady.fire();
+            }
+            console.log("Error initializing gprinter Connection: " + e);
+        }, gprinterName, "getConnectionInfo", []);
+    });
+
     module.exports = gprinter;
 

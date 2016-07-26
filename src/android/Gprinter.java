@@ -9,14 +9,17 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Base64;
+import android.util.Log;
 
 import com.gprinter.aidl.GpService;
 import com.gprinter.command.EscCommand;
-import com.gprinter.io.GpDevice;
 import com.gprinter.service.GpPrintService;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,19 +32,22 @@ import java.util.Vector;
 public class Gprinter extends CordovaPlugin {
 
     private static final String ACTION_CONNECT_STATUS = "action.connect.status";
-    private static final String PRINTER_ID = "printId";
-    private static final String PORT_TYPE = "portType";
-    private static final String DEVICE_NAME = "deviceName";
-    private static final String PORT_NUMBER = "portNumber";
-    private static final String TIME_OUT = "timeOut";
-    private static final String BASE64 = "base64";
-    private static final String FUCTION_NAME = "functionName";
-    private static final String TEXT = "text";
-    private static final String CHARSETNAME = "charsetName";
-    private static final String CONTENT ="content" ;
+    private static final String PRINTER_ID_PARAM = "printId";
+    private static final String PORT_TYPE_PARAM = "portType";
+    private static final String DEVICE_NAME_PARAM = "deviceName";
+    private static final String PORT_NUMBER_PARAM = "portNumber";
+    private static final String TIME_OUT_PARAM = "timeOut";
+    private static final String BASE64_PARAM = "base64";
+    private static final String FUCTION_NAME_PARAM = "functionName";
+    private static final String TEXT_PARAM = "text";
+    private static final String CHARSETNAME_PARAM = "charsetName";
+    private static final String CONTENT_PARAM = "content";
     private GpService gpService = null;
     private PrinterServiceConnection printerServiceConnection = null;
     private CallbackContext callbackContext;
+    private CallbackContext connectionCallbackContext;
+    private static final String LOG_TAG = "Gprinter";
+    BroadcastReceiver receiver;
 
     class PrinterServiceConnection implements ServiceConnection {
         @Override
@@ -56,8 +62,69 @@ public class Gprinter extends CordovaPlugin {
     }
 
     @Override
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        super.initialize(cordova, webView);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_CONNECT_STATUS);
+        if (this.receiver == null) {
+            this.receiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (Gprinter.this.webView != null) {
+                        updatePrinterInfo(intent);
+                    }
+                }
+            };
+            webView.getContext().registerReceiver(this.receiver, intentFilter);
+        }
+    }
+    @Override
+    public void onDestroy() {
+        if (this.receiver != null) {
+            try {
+                webView.getContext().unregisterReceiver(this.receiver);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "onDestroy: Error unregistering printer receiver. " + e.getMessage(), e);
+            } finally {
+                receiver = null;
+            }
+        }
+
+    }
+
+    private void updatePrinterInfo(Intent intent) {
+        if (ACTION_CONNECT_STATUS.equals(intent.getAction())) {
+            int type = intent.getIntExtra(GpPrintService.CONNECT_STATUS, 0);
+            int id = intent.getIntExtra(GpPrintService.PRINTER_ID, 0);
+            JSONObject info = new JSONObject();
+            addProperty(info, "id", id);
+            addProperty(info, "connectStatus", type);
+            sendUpdate(info);
+        }
+    }
+    /**
+     * Create a new plugin result and send it back to JavaScript
+     *
+     * @param obj the printer info to set as navigator.connection
+     */
+    private void sendUpdate(JSONObject obj) {
+        if (connectionCallbackContext != null) {
+            PluginResult result = new PluginResult(PluginResult.Status.OK, obj);
+            result.setKeepCallback(true);
+            connectionCallbackContext.sendPluginResult(result);
+        }
+    }
+
+    @Override
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         this.callbackContext = callbackContext;
+        if (action.equals("getConnectionInfo")) {
+            this.connectionCallbackContext= callbackContext;
+            PluginResult pluginResult= new PluginResult(PluginResult.Status.OK);
+            pluginResult.setKeepCallback(true);
+            callbackContext.sendPluginResult(pluginResult);
+            return true;
+        }
         if (action.equals("initService")) {
             initService();
             return true;
@@ -86,8 +153,7 @@ public class Gprinter extends CordovaPlugin {
             getPrinterCommandType(args);
             return true;
         }
-        if (action.equals("getCommand"))
-        {
+        if (action.equals("getCommand")) {
             getCommand(args);
             return true;
         }
@@ -114,8 +180,6 @@ public class Gprinter extends CordovaPlugin {
                     Thread.sleep(1000);
                     context.bindService(intent, printerServiceConnection, Context.BIND_AUTO_CREATE);
                     callbackContext.success();
-
-
                 } catch (Exception e) {
                     callbackContext.error(e.getMessage());
                 }
@@ -126,33 +190,13 @@ public class Gprinter extends CordovaPlugin {
     private void openPort(final JSONArray args) {
         checkInitService();
         JSONObject jsonObject = getArgsObject(args);
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ACTION_CONNECT_STATUS);
-        cordova.getActivity().registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (ACTION_CONNECT_STATUS.equals(intent.getAction())) {
-                    int type = intent.getIntExtra(GpPrintService.CONNECT_STATUS, 0);
-                    int id = intent.getIntExtra(GpPrintService.PRINTER_ID, 0);
-                    if (type == GpDevice.STATE_CONNECTING) {
-                        callbackContext.success();
-                        cordova.getActivity().unregisterReceiver(this);
-                    } else if (type == GpDevice.STATE_NONE) {
-
-                    } else if (type == GpDevice.STATE_VALID_PRINTER) {
-
-                    } else if (type == GpDevice.STATE_INVALID_PRINTER) {
-
-                    }
-                }
-            }
-        }, intentFilter);
         try {
-            int printId = jsonObject.getInt(PRINTER_ID);
-            int portType = jsonObject.getInt(PORT_TYPE);
-            String deviceName = jsonObject.getString(DEVICE_NAME);
-            int portNumber = jsonObject.getInt(PORT_NUMBER);
+            int printId = jsonObject.getInt(PRINTER_ID_PARAM);
+            int portType = jsonObject.getInt(PORT_TYPE_PARAM);
+            String deviceName = jsonObject.getString(DEVICE_NAME_PARAM);
+            int portNumber = jsonObject.getInt(PORT_NUMBER_PARAM);
             gpService.openPort(printId, portType, deviceName, portNumber);
+            callbackContext.success();
         } catch (JSONException e) {
             callbackContext.error("Invaild Parameters");
         } catch (RemoteException e) {
@@ -164,43 +208,21 @@ public class Gprinter extends CordovaPlugin {
     private void closePort(final JSONArray args) {
         checkInitService();
         JSONObject jsonObject = getArgsObject(args);
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ACTION_CONNECT_STATUS);
-        cordova.getActivity().registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (ACTION_CONNECT_STATUS.equals(intent.getAction())) {
-                    int type = intent.getIntExtra(GpPrintService.CONNECT_STATUS, 0);
-                    int id = intent.getIntExtra(GpPrintService.PRINTER_ID, 0);
-                    if (type == GpDevice.STATE_CONNECTING) {
-                        // callbackContext.success();
-                        cordova.getActivity().unregisterReceiver(this);
-                    } else if (type == GpDevice.STATE_NONE) {
-                        callbackContext.success();
-                        cordova.getActivity().unregisterReceiver(this);
-
-                    } else if (type == GpDevice.STATE_VALID_PRINTER) {
-
-                    } else if (type == GpDevice.STATE_INVALID_PRINTER) {
-
-                    }
-                }
-            }
-        }, intentFilter);
         try {
-            int printId = jsonObject.getInt(PRINTER_ID);
+            int printId = jsonObject.getInt(PRINTER_ID_PARAM);
             gpService.closePort(printId);
+            callbackContext.success();
         } catch (JSONException e) {
-            e.printStackTrace();
+            callbackContext.error("Invaild Parameters");
         } catch (RemoteException e) {
-            e.printStackTrace();
+            callbackContext.error("Fail close port");
         }
     }
 
     private void getPrinterConnectStatus(final JSONArray args) {
         JSONObject jsonObject = getArgsObject(args);
         try {
-            int printId = jsonObject.getInt(PRINTER_ID);
+            int printId = jsonObject.getInt(PRINTER_ID_PARAM);
             int result = gpService.getPrinterConnectStatus(printId);
             callbackContext.success(result);
         } catch (JSONException e) {
@@ -214,7 +236,7 @@ public class Gprinter extends CordovaPlugin {
         checkInitService();
         JSONObject jsonObject = getArgsObject(args);
         try {
-            jsonObject.getInt(PRINTER_ID);
+            jsonObject.getInt(PRINTER_ID_PARAM);
             int result = gpService.printeTestPage(0);
             callbackContext.success(result);
         } catch (JSONException e) {
@@ -227,8 +249,8 @@ public class Gprinter extends CordovaPlugin {
     private void queryPrinterStatus(final JSONArray args) {
         JSONObject jsonObject = getArgsObject(args);
         try {
-            int printId = jsonObject.getInt(PRINTER_ID);
-            int timeOut = jsonObject.getInt(TIME_OUT);
+            int printId = jsonObject.getInt(PRINTER_ID_PARAM);
+            int timeOut = jsonObject.getInt(TIME_OUT_PARAM);
             int result = gpService.queryPrinterStatus(printId, timeOut);
             callbackContext.success(result);
         } catch (JSONException e) {
@@ -241,7 +263,7 @@ public class Gprinter extends CordovaPlugin {
     private void getPrinterCommandType(final JSONArray args) {
         JSONObject jsonObject = getArgsObject(args);
         try {
-            int printId = jsonObject.getInt(PRINTER_ID);
+            int printId = jsonObject.getInt(PRINTER_ID_PARAM);
             int result = gpService.getPrinterCommandType(printId);
             callbackContext.success(result);
         } catch (JSONException e) {
@@ -254,8 +276,8 @@ public class Gprinter extends CordovaPlugin {
     private void sendEscCommand(final JSONArray args) {
         JSONObject jsonObject = getArgsObject(args);
         try {
-            int printId = jsonObject.getInt(PRINTER_ID);
-            String base64 = jsonObject.getString(BASE64);
+            int printId = jsonObject.getInt(PRINTER_ID_PARAM);
+            String base64 = jsonObject.getString(BASE64_PARAM);
             int result = gpService.sendEscCommand(printId, base64);
             callbackContext.success(result);
         } catch (JSONException e) {
@@ -268,8 +290,8 @@ public class Gprinter extends CordovaPlugin {
     private void sendTscCommand(final JSONArray args) {
         JSONObject jsonObject = getArgsObject(args);
         try {
-            int printId = jsonObject.getInt(PRINTER_ID);
-            String base64 = jsonObject.getString(BASE64);
+            int printId = jsonObject.getInt(PRINTER_ID_PARAM);
+            String base64 = jsonObject.getString(BASE64_PARAM);
             int result = gpService.sendLabelCommand(printId, base64);
             callbackContext.success(result);
         } catch (JSONException e) {
@@ -289,13 +311,13 @@ public class Gprinter extends CordovaPlugin {
         try {
             for (int i = 0; i < args.length(); ++i) {
                 JSONObject jsonObject = args.getJSONObject(i);
-                String functionName = jsonObject.getString(FUCTION_NAME);
+                String functionName = jsonObject.getString(FUCTION_NAME_PARAM);
                 if ("addHorTab".equals(functionName)) {
                     escCommand.addHorTab();
                 }
                 if ("addText".equals(functionName)) {
-                    String text = jsonObject.getString(TEXT);
-                    String charsetName = jsonObject.optString(CHARSETNAME, null);
+                    String text = jsonObject.getString(TEXT_PARAM);
+                    String charsetName = jsonObject.optString(CHARSETNAME_PARAM, null);
                     escCommand.addText(text, charsetName);
                 }
                 if ("addSound".equals(functionName)) {
@@ -325,39 +347,39 @@ public class Gprinter extends CordovaPlugin {
 
                 }
                 if ("addUPCA".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addUPCA(content);
                 }
                 if ("addUPCE".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addUPCE(content);
                 }
                 if ("addEAN13".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addEAN13(content);
                 }
                 if ("addEAN8".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addEAN8(content);
                 }
                 if ("addCODE39".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addCODE39(content);
                 }
                 if ("addCODE93".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addCODE93(content);
                 }
                 if ("addCODE128".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addCODE128(content);
                 }
                 if ("addEAN13".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addEAN13(content);
                 }
                 if ("addITF".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addITF(content);
                 }
                 if ("addPrintAndLineFeed".equals(functionName)) {
@@ -377,7 +399,7 @@ public class Gprinter extends CordovaPlugin {
                     EscCommand.ENABLE doubleheight = EscCommand.ENABLE.valueOf(jsonObject.getString("doubleheight"));
                     EscCommand.ENABLE doublewidth = EscCommand.ENABLE.valueOf(jsonObject.getString("doublewidth"));
                     EscCommand.ENABLE underline = EscCommand.ENABLE.valueOf(jsonObject.getString("underline"));
-                    escCommand.addSelectPrintModes(font,emphasized,doubleheight,doublewidth,underline);
+                    escCommand.addSelectPrintModes(font, emphasized, doubleheight, doublewidth, underline);
                 }
                 if ("addSetAbsolutePrintPosition".equals(functionName)) {
                     int n = jsonObject.getInt("n");
@@ -516,13 +538,13 @@ public class Gprinter extends CordovaPlugin {
                     escCommand.addSelectErrorCorrectionLevelForQRCode((byte) n);
                 }
                 if ("addStoreQRCodeData".equals(functionName)) {
-                    String content = jsonObject.getString(CONTENT);
+                    String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addStoreQRCodeData(content);
                 }
                 if ("addPrintQRCode ".equals(functionName)) {
-                    escCommand.addPrintQRCode ();
+                    escCommand.addPrintQRCode();
                 }
-                if ("addUserCommand".equals(functionName)){
+                if ("addUserCommand".equals(functionName)) {
 //                    escCommand.addUserCommand();
                 }
                 //end QRCODE
@@ -546,8 +568,8 @@ public class Gprinter extends CordovaPlugin {
             } catch (JSONException ex) {
                 return null;
             }
-        }else {
-        return null;
+        } else {
+            return null;
 
         }
 
