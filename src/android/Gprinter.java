@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Base64;
@@ -42,6 +44,7 @@ public class Gprinter extends CordovaPlugin {
     private static final String TEXT_PARAM = "text";
     private static final String CHARSETNAME_PARAM = "charsetName";
     private static final String CONTENT_PARAM = "content";
+    private static final String ENABLE_PARAM = "enable";
     private GpService gpService = null;
     private PrinterServiceConnection printerServiceConnection = null;
     private CallbackContext callbackContext;
@@ -78,6 +81,7 @@ public class Gprinter extends CordovaPlugin {
             webView.getContext().registerReceiver(this.receiver, intentFilter);
         }
     }
+
     @Override
     public void onDestroy() {
         if (this.receiver != null) {
@@ -102,6 +106,7 @@ public class Gprinter extends CordovaPlugin {
             sendUpdate(info);
         }
     }
+
     /**
      * Create a new plugin result and send it back to JavaScript
      *
@@ -119,8 +124,8 @@ public class Gprinter extends CordovaPlugin {
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         this.callbackContext = callbackContext;
         if (action.equals("getConnectionInfo")) {
-            this.connectionCallbackContext= callbackContext;
-            PluginResult pluginResult= new PluginResult(PluginResult.Status.OK);
+            this.connectionCallbackContext = callbackContext;
+            PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
             pluginResult.setKeepCallback(true);
             callbackContext.sendPluginResult(pluginResult);
             return true;
@@ -161,7 +166,7 @@ public class Gprinter extends CordovaPlugin {
             sendEscCommand(args);
             return true;
         }
-        if (action.equals("sendTscComma")) {
+        if (action.equals("sendTscCommand")) {
             sendTscCommand(args);
             return true;
         }
@@ -181,7 +186,7 @@ public class Gprinter extends CordovaPlugin {
                     context.bindService(intent, printerServiceConnection, Context.BIND_AUTO_CREATE);
                     callbackContext.success();
                 } catch (Exception e) {
-                    callbackContext.error(e.getMessage());
+                    callbackContext.error("Error(InitService)" + e.getMessage());
                 }
             }
         });
@@ -195,12 +200,12 @@ public class Gprinter extends CordovaPlugin {
             int portType = jsonObject.getInt(PORT_TYPE_PARAM);
             String deviceName = jsonObject.getString(DEVICE_NAME_PARAM);
             int portNumber = jsonObject.getInt(PORT_NUMBER_PARAM);
-            gpService.openPort(printId, portType, deviceName, portNumber);
-            callbackContext.success();
+            int errorCode = gpService.openPort(printId, portType, deviceName, portNumber);
+            callbackContext.success(errorCode);
         } catch (JSONException e) {
             callbackContext.error("Invaild Parameters");
         } catch (RemoteException e) {
-            callbackContext.error("Fail open port");
+            callbackContext.error("Error(OpenPort):" + e.getMessage());
         }
 
     }
@@ -213,9 +218,9 @@ public class Gprinter extends CordovaPlugin {
             gpService.closePort(printId);
             callbackContext.success();
         } catch (JSONException e) {
-            callbackContext.error("Invaild Parameters");
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         } catch (RemoteException e) {
-            callbackContext.error("Fail close port");
+            callbackContext.error("Error(ClosePort):" + e.getMessage());
         }
     }
 
@@ -223,12 +228,12 @@ public class Gprinter extends CordovaPlugin {
         JSONObject jsonObject = getArgsObject(args);
         try {
             int printId = jsonObject.getInt(PRINTER_ID_PARAM);
-            int result = gpService.getPrinterConnectStatus(printId);
-            callbackContext.success(result);
+            int connectStatus = gpService.getPrinterConnectStatus(printId);
+            callbackContext.success(connectStatus);
         } catch (JSONException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         } catch (RemoteException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(GetPrinterConnectStatus):" + e.getMessage());
         }
     }
 
@@ -236,13 +241,13 @@ public class Gprinter extends CordovaPlugin {
         checkInitService();
         JSONObject jsonObject = getArgsObject(args);
         try {
-            jsonObject.getInt(PRINTER_ID_PARAM);
-            int result = gpService.printeTestPage(0);
-            callbackContext.success(result);
+            int printerId = jsonObject.getInt(PRINTER_ID_PARAM);
+            int errorCode = gpService.printeTestPage(printerId);
+            callbackContext.success(errorCode);
         } catch (JSONException e) {
-            callbackContext.error("Invaild Parameters");
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         } catch (RemoteException e) {
-            callbackContext.error("Fail Print Test Page");
+            callbackContext.error("Error(PrintTestPage):" + e.getMessage());
         }
     }
 
@@ -251,12 +256,12 @@ public class Gprinter extends CordovaPlugin {
         try {
             int printId = jsonObject.getInt(PRINTER_ID_PARAM);
             int timeOut = jsonObject.getInt(TIME_OUT_PARAM);
-            int result = gpService.queryPrinterStatus(printId, timeOut);
-            callbackContext.success(result);
+            int printerStatus = gpService.queryPrinterStatus(printId, timeOut);
+            callbackContext.success(printerStatus);
         } catch (JSONException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         } catch (RemoteException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(QueryPrinterStatus):" + e.getMessage());
         }
     }
 
@@ -264,12 +269,12 @@ public class Gprinter extends CordovaPlugin {
         JSONObject jsonObject = getArgsObject(args);
         try {
             int printId = jsonObject.getInt(PRINTER_ID_PARAM);
-            int result = gpService.getPrinterCommandType(printId);
-            callbackContext.success(result);
+            int command = gpService.getPrinterCommandType(printId);
+            callbackContext.success(command);
         } catch (JSONException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         } catch (RemoteException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(QueryPrinterStatus):" + e.getMessage());
         }
     }
 
@@ -278,12 +283,12 @@ public class Gprinter extends CordovaPlugin {
         try {
             int printId = jsonObject.getInt(PRINTER_ID_PARAM);
             String base64 = jsonObject.getString(BASE64_PARAM);
-            int result = gpService.sendEscCommand(printId, base64);
-            callbackContext.success(result);
+            int errorCode = gpService.sendEscCommand(printId, base64);
+            callbackContext.success(errorCode);
         } catch (JSONException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         } catch (RemoteException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(SendEscCommand):" + e.getMessage());
         }
     }
 
@@ -292,12 +297,12 @@ public class Gprinter extends CordovaPlugin {
         try {
             int printId = jsonObject.getInt(PRINTER_ID_PARAM);
             String base64 = jsonObject.getString(BASE64_PARAM);
-            int result = gpService.sendLabelCommand(printId, base64);
-            callbackContext.success(result);
+            int errorCode = gpService.sendLabelCommand(printId, base64);
+            callbackContext.success(errorCode);
         } catch (JSONException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         } catch (RemoteException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(SendTscCommand):" + e.getMessage());
         }
     }
 
@@ -314,243 +319,199 @@ public class Gprinter extends CordovaPlugin {
                 String functionName = jsonObject.getString(FUCTION_NAME_PARAM);
                 if ("addHorTab".equals(functionName)) {
                     escCommand.addHorTab();
-                }
-                if ("addText".equals(functionName)) {
+                } else if ("addText".equals(functionName)) {
                     String text = jsonObject.getString(TEXT_PARAM);
                     String charsetName = jsonObject.optString(CHARSETNAME_PARAM, null);
                     escCommand.addText(text, charsetName);
-                }
-                if ("addSound".equals(functionName)) {
+                } else if ("addSound".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     int t = jsonObject.getInt("t");
                     escCommand.addSound((byte) n, (byte) t);
-                }
-                if ("addCancelKanjiMode".equals(functionName)) {
+                } else if ("addCancelKanjiMode".equals(functionName)) {
                     escCommand.addCancelKanjiMode();
-                }
-                if ("addSetKanjiLefttandRightSpace".equals(functionName)) {
+                } else if ("addSetKanjiLefttandRightSpace".equals(functionName)) {
                     int left = jsonObject.getInt("left");
                     int right = jsonObject.getInt("right");
                     escCommand.addSetKanjiLefttandRightSpace((byte) left, (byte) right);
-                }
-                if ("addSetQuadrupleModeForKanji".equals(functionName)) {
-                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                } else if ("addSetQuadrupleModeForKanji".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addSetQuadrupleModeForKanji(enable);
-                }
-                if ("addRastBitImage".equals(functionName)) {
+                } else if ("addRastBitImage".equals(functionName)) {
+                    JSONArray arrays = jsonObject.getJSONArray("bitmap");
+                    int nWidth = jsonObject.getInt("nWidth");
+                    int nMode = jsonObject.getInt("nMode");
+                    byte[] bytes = new byte[arrays.length()];
+                    for (int index = 0; index < arrays.length(); ++index) {
+                        bytes[index] = (byte) arrays.getInt(index);
+                    }
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    escCommand.addRastBitImage(bitmap,nWidth,nMode);
+                } else if ("addDownloadNvBitImage".equals(functionName)) {
 
-                }
-                if ("addDownloadNvBitImage".equals(functionName)) {
+                } else if ("addPrintNvBitmap".equals(functionName)) {
 
-                }
-                if ("addPrintNvBitmap".equals(functionName)) {
-
-                }
-                if ("addUPCA".equals(functionName)) {
+                } else if ("addUPCA".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addUPCA(content);
-                }
-                if ("addUPCE".equals(functionName)) {
+                } else if ("addUPCE".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addUPCE(content);
-                }
-                if ("addEAN13".equals(functionName)) {
+                } else if ("addEAN13".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addEAN13(content);
-                }
-                if ("addEAN8".equals(functionName)) {
+                } else if ("addEAN8".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addEAN8(content);
-                }
-                if ("addCODE39".equals(functionName)) {
+                } else if ("addCODE39".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addCODE39(content);
-                }
-                if ("addCODE93".equals(functionName)) {
+                } else if ("addCODE93".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addCODE93(content);
-                }
-                if ("addCODE128".equals(functionName)) {
+                } else if ("addCODE128".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addCODE128(content);
-                }
-                if ("addEAN13".equals(functionName)) {
+                } else if ("addEAN13".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addEAN13(content);
-                }
-                if ("addITF".equals(functionName)) {
+                } else if ("addITF".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addITF(content);
-                }
-                if ("addPrintAndLineFeed".equals(functionName)) {
+                } else if ("addPrintAndLineFeed".equals(functionName)) {
                     escCommand.addPrintAndLineFeed();
-                }
-                if ("addPrintAndFeedLines".equals(functionName)) {
+                } else if ("addPrintAndFeedLines".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addPrintAndFeedLines((byte) n);
-                }
-                if ("addSetRightSideCharacterSpacing".equals(functionName)) {
+                } else if ("addSetRightSideCharacterSpacing".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addSetRightSideCharacterSpacing((byte) n);
-                }
-                if ("addSelectPrintModes".equals(functionName)) {
+                } else if ("addSelectPrintModes".equals(functionName)) {
                     EscCommand.FONT font = EscCommand.FONT.valueOf(jsonObject.getString("font"));
                     EscCommand.ENABLE emphasized = EscCommand.ENABLE.valueOf(jsonObject.getString("emphasized"));
                     EscCommand.ENABLE doubleheight = EscCommand.ENABLE.valueOf(jsonObject.getString("doubleheight"));
                     EscCommand.ENABLE doublewidth = EscCommand.ENABLE.valueOf(jsonObject.getString("doublewidth"));
                     EscCommand.ENABLE underline = EscCommand.ENABLE.valueOf(jsonObject.getString("underline"));
                     escCommand.addSelectPrintModes(font, emphasized, doubleheight, doublewidth, underline);
-                }
-                if ("addSetAbsolutePrintPosition".equals(functionName)) {
+                } else if ("addSetAbsolutePrintPosition".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addSetAbsolutePrintPosition((short) n);
-                }
-                if ("addTurnUnderlineModeOnOrOff".equals(functionName)) {
+                } else if ("addTurnUnderlineModeOnOrOff".equals(functionName)) {
                     String underline = jsonObject.getString("underline");
                     EscCommand.UNDERLINE_MODE underlineMode = EscCommand.UNDERLINE_MODE.valueOf(underline);
                     escCommand.addTurnUnderlineModeOnOrOff(underlineMode);
-                }
-                if ("addSelectDefualtLineSpacing ".equals(functionName)) {
+                } else if ("addSelectDefualtLineSpacing ".equals(functionName)) {
                     escCommand.addSelectDefualtLineSpacing();
-                }
-                if ("addSetLineSpacing".equals(functionName)) {
+                } else if ("addSetLineSpacing".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addSetLineSpacing((byte) n);
-                }
-                if ("addInitializePrinter".equals(functionName)) {
+                } else if ("addInitializePrinter".equals(functionName)) {
                     escCommand.addInitializePrinter();
-                }
-                if ("addTurnEmphasizedModeOnOrOff".equals(functionName)) {
-                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                } else if ("addTurnEmphasizedModeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addTurnEmphasizedModeOnOrOff(enable);
-                }
-                if ("addTurnDoubleStrikeOnOrOff".equals(functionName)) {
-                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                } else if ("addTurnDoubleStrikeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addTurnDoubleStrikeOnOrOff(enable);
-                }
-                if ("addPrintAndFeedPaper".equals(functionName)) {
+                } else if ("addPrintAndFeedPaper".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addPrintAndFeedPaper((byte) n);
-                }
-                if ("addSelectCharacterFont".equals(functionName)) {
+                } else if ("addSelectCharacterFont".equals(functionName)) {
                     EscCommand.FONT font = EscCommand.FONT.valueOf(jsonObject.getString("font"));
                     escCommand.addSelectCharacterFont(font);
-                }
-                if ("addSelectInternationalCharacterSet".equals(functionName)) {
+                } else if ("addSelectInternationalCharacterSet".equals(functionName)) {
                     EscCommand.CHARACTER_SET character_set = EscCommand.CHARACTER_SET.valueOf(jsonObject.getString("charset"));
                     escCommand.addSelectInternationalCharacterSet(character_set);
-                }
-                if ("addTurn90ClockWiseRotatin".equals(functionName)) {
-                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                } else if ("addTurn90ClockWiseRotatin".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addTurn90ClockWiseRotatin(enable);
-                }
-                if ("addSetRelativePrintPositon".equals(functionName)) {
+                } else if ("addSetRelativePrintPositon".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addSetRelativePrintPositon((short) n);
-                }
-                if ("addSelectJustification".equals(functionName)) {
+                } else if ("addSelectJustification".equals(functionName)) {
                     EscCommand.JUSTIFICATION justification = EscCommand.JUSTIFICATION.valueOf(jsonObject.getString("justification"));
                     escCommand.addSelectJustification(justification);
-
-                }
-                if ("addSelectCodePage".equals(functionName)) {
+                } else if ("addSelectCodePage".equals(functionName)) {
                     EscCommand.CODEPAGE codepage = EscCommand.CODEPAGE.valueOf(jsonObject.getString("codepage"));
                     escCommand.addSelectCodePage(codepage);
-                }
-                if ("addTurnUpsideDownModeOnOrOff".equals(functionName)) {
-                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                } else if ("addTurnUpsideDownModeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addTurnUpsideDownModeOnOrOff(enable);
-                }
-                if ("addSetCharcterSize".equals(functionName)) {
+                } else if ("addSetCharcterSize".equals(functionName)) {
                     String width = jsonObject.getString("width");
                     String height = jsonObject.getString("height");
                     EscCommand.WIDTH_ZOOM width_zoom = EscCommand.WIDTH_ZOOM.valueOf(width);
                     EscCommand.HEIGHT_ZOOM height_zoom = EscCommand.HEIGHT_ZOOM.valueOf(height);
                     escCommand.addSetCharcterSize(width_zoom, height_zoom);
-                }
-                if ("addTurnReverseModeOnOrOff".equals(functionName)) {
-                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                } else if ("addTurnReverseModeOnOrOff".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addTurnReverseModeOnOrOff(enable);
-                }
-                if ("addSelectPrintingPositionForHRICharacters".equals(functionName)) {
+                } else if ("addSelectPrintingPositionForHRICharacters".equals(functionName)) {
                     String _hri_position = jsonObject.getString("HRI_POSITION");
                     EscCommand.HRI_POSITION hri_position = EscCommand.HRI_POSITION.valueOf(_hri_position);
                     escCommand.addSelectPrintingPositionForHRICharacters(hri_position);
-                }
-                if ("addSetLeftMargin".equals(functionName)) {
+                } else if ("addSetLeftMargin".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addSetLeftMargin((short) n);
-                }
-                if ("addSetHorAndVerMotionUnits".equals(functionName)) {
+                } else if ("addSetHorAndVerMotionUnits".equals(functionName)) {
                     int x = jsonObject.getInt("x");
                     int y = jsonObject.getInt("y");
-                    escCommand.addSetHorAndVerMotionUnits((byte) x, (byte) y);
-                }
-                if ("addCutAndFeedPaper".equals(functionName)) {
+                    escCommand.addSetHorAndVerMotionUnits((byte) 5, (byte) y);
+                } else if ("addCutAndFeedPaper".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addCutAndFeedPaper((byte) n);
-                }
-                if ("addCutPaper".equals(functionName)) {
+                } else if ("addCutPaper".equals(functionName)) {
                     escCommand.addCutPaper();
-                }
-                if ("addSetPrintingAreaWidth".equals(functionName)) {
+                } else if ("addSetPrintingAreaWidth".equals(functionName)) {
                     int length = jsonObject.getInt("length");
                     escCommand.addSetPrintingAreaWidth((short) length);
-                }
-                if ("addSelectKanjiMode".equals(functionName)) {
+                } else if ("addSelectKanjiMode".equals(functionName)) {
                     escCommand.addSelectKanjiMode();
-                }
-                if ("addSetKanjiUnderLine".equals(functionName)) {
+                } else if ("addSetKanjiUnderLine".equals(functionName)) {
                     EscCommand.UNDERLINE_MODE underline_mode = EscCommand.UNDERLINE_MODE.valueOf(jsonObject.getString("UNDERLINE_MODE"));
                     escCommand.addSetKanjiUnderLine(underline_mode);
-                }
-                if ("addCancelKanjiMode".equals(functionName)) {
+                } else if ("addCancelKanjiMode".equals(functionName)) {
                     escCommand.addCancelKanjiMode();
-                }
-                if ("addSetKanjiLeftAndRightSpacing".equals(functionName)) {
+                } else if ("addSetKanjiLeftAndRightSpacing".equals(functionName)) {
                     int left = jsonObject.getInt("left");
                     int right = jsonObject.getInt("right");
                     escCommand.addSetKanjiLefttandRightSpace((byte) left, (byte) right);
-                }
-                if ("addSetQuadrupleModeForKanji".equals(functionName)) {
-                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString("enable"));
+                } else if ("addSetQuadrupleModeForKanji".equals(functionName)) {
+                    EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addSetQuadrupleModeForKanji(enable);
-                }
-                if ("addSetFontForHRICharacter".equals(functionName)) {
+                } else if ("addSetFontForHRICharacter".equals(functionName)) {
                     EscCommand.FONT font = EscCommand.FONT.valueOf(jsonObject.getString("font"));
                     escCommand.addSetFontForHRICharacter(font);
-                }
-                if ("addSetBarcodeHeight".equals(functionName)) {
+                } else if ("addSetBarcodeHeight".equals(functionName)) {
                     int width = jsonObject.getInt("width");
                     escCommand.addSetLeftMargin((byte) width);
-                }
-                if ("addSetBarcodeWidth".equals(functionName)) {
+                } else if ("addSetBarcodeWidth".equals(functionName)) {
                     int height = jsonObject.getInt("height");
                     escCommand.addSetLeftMargin((byte) height);
-                }
-//QRCODE
-                if ("addSelectSizeOfModuleForQRCode".equals(functionName)) {
+                } else if ("addSelectSizeOfModuleForQRCode".equals(functionName)) {
                     int n = jsonObject.getInt("n");
                     escCommand.addSelectSizeOfModuleForQRCode((byte) n);
-                }
-                if ("addSelectErrorCorrectionLevelForQRCode".equals(functionName)) {
+                } else if ("addSelectErrorCorrectionLevelForQRCode".equals(functionName)) {
                     int n = jsonObject.getInt("height");
                     escCommand.addSelectErrorCorrectionLevelForQRCode((byte) n);
-                }
-                if ("addStoreQRCodeData".equals(functionName)) {
+                } else if ("addStoreQRCodeData".equals(functionName)) {
                     String content = jsonObject.getString(CONTENT_PARAM);
                     escCommand.addStoreQRCodeData(content);
-                }
-                if ("addPrintQRCode ".equals(functionName)) {
+                } else if ("addPrintQRCode ".equals(functionName)) {
                     escCommand.addPrintQRCode();
+                } else if ("addUserCommand".equals(functionName)) {
+                    JSONArray arrays = jsonObject.getJSONArray("command");
+                    byte[] bytes = new byte[arrays.length()];
+                    for (int index = 0; index < arrays.length(); ++index) {
+                        bytes[index] = (byte) arrays.getInt(index);
+                    }
+                    escCommand.addUserCommand(bytes);
+                } else {
+                    callbackContext.error("Error(FunctionName):no match " + functionName + ".");
+                    return;
                 }
-                if ("addUserCommand".equals(functionName)) {
-//                    escCommand.addUserCommand();
-                }
-                //end QRCODE
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            callbackContext.error("Error(Parameters):" + e.getMessage());
         }
         Vector<Byte> Bytes = escCommand.getCommand();
         byte[] bytes = new byte[Bytes.size()];
