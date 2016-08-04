@@ -359,7 +359,7 @@ public class Gprinter extends CordovaPlugin {
 
                     // escCommand.addRastBitImage(b, 384, 0); // 打印图片
                     // escCommand.addText("第 " + i + " 份\n");
-                    //escCommand.addRastBitImage(bitmap,nWidth,nMode);
+                    escCommand.addRastBitImage(bitmap,nWidth,nMode);
                 } else if ("addDownloadNvBitImage".equals(functionName)) {
 
                 } else if ("addPrintNvBitmap".equals(functionName)) {
