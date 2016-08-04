@@ -28,6 +28,8 @@ import org.json.JSONObject;
 
 import java.util.Vector;
 
+import io.cordova.myapp446e6e.R;
+
 /**
  * This class echoes a string called from JavaScript.
  */
@@ -337,15 +339,27 @@ public class Gprinter extends CordovaPlugin {
                     EscCommand.ENABLE enable = EscCommand.ENABLE.valueOf(jsonObject.getString(ENABLE_PARAM));
                     escCommand.addSetQuadrupleModeForKanji(enable);
                 } else if ("addRastBitImage".equals(functionName)) {
-                    JSONArray arrays = jsonObject.getJSONArray("bitmap");
-                    int nWidth = jsonObject.getInt("nWidth");
-                    int nMode = jsonObject.getInt("nMode");
-                    byte[] bytes = new byte[arrays.length()];
-                    for (int index = 0; index < arrays.length(); ++index) {
-                        bytes[index] = (byte) arrays.getInt(index);
-                    }
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    escCommand.addRastBitImage(bitmap,nWidth,nMode);
+//                    JSONArray arrays = jsonObject.getJSONArray("bitmap");
+//                    byte[] bytes = new byte[length];
+//                    for (int index = 0; index < length; ++index) {
+//                        bytes[index] = (byte) arrays.getInt(index);
+//                    }
+//                    int length= arrays.length();
+//                    BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+                   String bitmapBase64=jsonObject.getString("bitmap");
+                   int nWidth = jsonObject.getInt("nWidth");
+                   int nMode = jsonObject.getInt("nMode");
+                   byte[] bytes = Base64.decode(bitmapBase64, Base64.DEFAULT);
+                   Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                   if (bitmap!=null)
+
+                    // escCommand.addText("Print bitmap!\n"); // 打印文字
+                    // Bitmap b = BitmapFactory.decodeResource(cordova.getActivity().getResources(), R.drawable.icon);
+
+                    // escCommand.addRastBitImage(b, 384, 0); // 打印图片
+                    // escCommand.addText("第 " + i + " 份\n");
+                    //escCommand.addRastBitImage(bitmap,nWidth,nMode);
                 } else if ("addDownloadNvBitImage".equals(functionName)) {
 
                 } else if ("addPrintNvBitmap".equals(functionName)) {
