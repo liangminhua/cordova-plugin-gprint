@@ -1,28 +1,58 @@
 /********* Gprinter.m Cordova Plugin Implementation *******/
-
+#import "Gprinter.h"
 #import <Cordova/CDV.h>
-
-@interface Gprinter : CDVPlugin {
-  // Member variables go here.
-}
-
-- (void)coolMethod:(CDVInvokedUrlCommand*)command;
-@end
 
 @implementation Gprinter
 
-- (void)coolMethod:(CDVInvokedUrlCommand*)command
+- (void)initService:(CDVInvokedUrlCommand*)command
 {
     CDVPluginResult* pluginResult = nil;
-    NSString* echo = [command.arguments objectAtIndex:0];
+    //NSString* echo = [command.arguments objectAtIndex:0];
 
-    if (echo != nil && [echo length] > 0) {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:echo];
+    if (true) {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"haode"];
     } else {
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
     }
 
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
+-(void)openPort:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)closePort:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)printTestPage:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)queryPrinterStatus:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)getPrinterCommandType:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)getCommand:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)getTscCommand:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)sendEscCommand:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+-(void)sendTscCommand:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult=nil;
+    
+}
+
 
 @end
