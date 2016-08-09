@@ -55,14 +55,15 @@
         <param name="ios-package" value="Gprinter" />
       </feature>
     </config-file>
-    <header-file src="src/ios/include/BLKWrite.h"/>
-    <header-file src="src/ios/include/CBController.h"/>
-    <header-file src="src/ios/include/DeviceInfo.h"/>
-    <header-file src="src/ios/include/EscCommand.h"/>
-    <header-file src="src/ios/include/MyPeripheral.h"/>
-    <header-file src="src/ios/include/TscCommand.h"/>
-    <header-file src="src/ios/include/ReliableBurstData.h"/>
-    <header-file src="src/ios/Gprinter.h"/>
+    <header-file src="src/ios/include/BLKWrite.h" />
+    <header-file src="src/ios/include/CBController.h" />
+    <header-file src="src/ios/include/DeviceInfo.h" />
+    <header-file src="src/ios/include/EscCommand.h" />
+    <header-file src="src/ios/include/MyPeripheral.h" />
+    <header-file src="src/ios/include/TscCommand.h" />
+    <header-file src="src/ios/include/ReliableBurstData.h" />
+    <header-file src="src/ios/Gprinter.h" />
     <source-file src="src/ios/Gprinter.m" />
+    <source-file src="src/ios/libGSDK.a" framework="true" />
   </platform>
 </plugin>

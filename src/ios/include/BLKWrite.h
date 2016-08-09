@@ -11,15 +11,11 @@
 
 /*
  调用Wi-Fi模式
-    1 [BLKWrite Instance].bWiFiMode = YES
-    2 [BLKWrite Instance] 设置ServerIP、port
-    3 [[BLKWrite Instance] initWiFiClient];
-    4 TSC：-(void) writeTscData:(NSData*) data withResponse;
-    5 ESC：-(void) writeEscData:(NSData*) data withResponse;
  
- 获取打印机纸张宽度
-    1 校验后
-    2[[BLKWrite Instance] PrintWidth];
+ 1 [BLKWrite Instance] 设置ServerIP、port
+ 2 [[BLKWrite Instance] initWiFiClient];
+ 3 TSC：-(void) writeTscData:(NSData*) data withResponse;
+ 4 ESC：-(void) writeEscData:(NSData*) data withResponse;
  
  */
 
@@ -41,9 +37,8 @@
 -(void) setPeripheral:(MyPeripheral*) peripheral;
 
 #pragma mark-Wi-Fi Mode
--(void) initWiFiClient;
 
-#pragma mark-
+-(void) initWiFiClient;
 
 -(int) PrintWidth;
 
