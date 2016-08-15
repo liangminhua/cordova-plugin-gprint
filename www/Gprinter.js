@@ -5,12 +5,6 @@
     var gprinterName = "Gprinter";
     var bluetoothleName = "BluetoothLePlugin";
     var gprinter = {
-        initService: function (success, error) {
-            cordova.exec(success, success, gprinterName, "initService", []);
-        },
-        stopService: function (success, error) {
-            cordova.exec(success, success, gprinterName, "stopService", []);
-        },
         openPort: function (success, error, params) {
             cordova.exec(success, success, gprinterName, "openPort", [params]);
         },
