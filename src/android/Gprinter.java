@@ -123,7 +123,6 @@ public class Gprinter extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
-        this.callbackContext = callbackContext;
         if (action.equals("getConnectionInfo")) {
             this.connectionCallbackContext = callbackContext;
             PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
@@ -131,6 +130,7 @@ public class Gprinter extends CordovaPlugin {
             callbackContext.sendPluginResult(pluginResult);
             return true;
         }
+        this.callbackContext = callbackContext;
         if (action.equals("openPort")) {
             openPort(args);
             return true;
