@@ -67,6 +67,7 @@ public class Gprinter extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
+        initService();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ACTION_CONNECT_STATUS);
         if (this.receiver == null) {
@@ -128,10 +129,6 @@ public class Gprinter extends CordovaPlugin {
             PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
             pluginResult.setKeepCallback(true);
             callbackContext.sendPluginResult(pluginResult);
-            return true;
-        }
-        if (action.equals("initService")) {
-            initService();
             return true;
         }
         if (action.equals("openPort")) {
@@ -307,8 +304,9 @@ public class Gprinter extends CordovaPlugin {
     }
 
     private void checkInitService() {
-        if (gpService == null)
-            callbackContext.error("please initService first!");
+        if (gpService == null) {
+            initService();
+        }
     }
 
     private void getCommand(final JSONArray args) {
