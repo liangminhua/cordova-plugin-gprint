@@ -44,7 +44,8 @@
                 channel.onCordovaConnectionReady.fire();
             }
         }, function (params) {
-            // If we can't get the network info we should still tell Cordova
+            // 如果事件启动失败，依然调起deviceready事件，使程序继续执行。
+            // If we can't get the bluetooth info we should still tell Cordova
             // to fire the deviceready event.
             if (channel.onCordovaConnectionReady.state !== 2) {
                 channel.onCordovaConnectionReady.fire();
