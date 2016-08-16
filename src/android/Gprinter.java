@@ -179,11 +179,9 @@ public class Gprinter extends CordovaPlugin {
                 try {
                     context.startService(intent);
                     printerServiceConnection = new PrinterServiceConnection();
-                    Thread.sleep(1000);
                     context.bindService(intent, printerServiceConnection, Context.BIND_AUTO_CREATE);
-                    callbackContext.success();
                 } catch (Exception e) {
-                    callbackContext.error("Error(InitService)" + e.getMessage());
+                    Log.e(LOG_TAG, "Error(InitService): ",e );
                 }
             }
         });
@@ -202,7 +200,8 @@ public class Gprinter extends CordovaPlugin {
         } catch (JSONException e) {
             callbackContext.error("Invaild Parameters");
         } catch (RemoteException e) {
-            callbackContext.error("Error(OpenPort):" + e.getMessage());
+            if (callbackContext != null)
+                callbackContext.error("Error(OpenPort):" + e.getMessage());
         }
 
     }

@@ -4,7 +4,7 @@
   <description>Cordova Gprinter(Bluetooth-printer) Plugin</description>
   <author>BEN</author>
   <license>Apache 2.0 License</license>
-  <dependency id="cordova-plugin-bluetoothle" version="4.2.1"/>
+  <dependency id="cordova-plugin-bluetoothle" version="4.2.1" />
   <js-module name="Gprinter" src="www/Gprinter.js">
     <clobbers target="gprinter" />
   </js-module>
@@ -43,12 +43,12 @@
       <uses-feature android:name="android.hardware.usb.host" />
     </config-file>
     <source-file src="src/android/Gprinter.java" target-dir="src/cordova/plugin/gprint" />
-    <source-file src="src/android/libs/gprintersdkv22.jar" target-dir="libs"/>
-    <source-file src="src/android/libs/xUtils-2.6.14.jar" target-dir="libs"/>
-    <source-file src="src/android/jni/armeabi/libgpequipment.so" target-dir="libs/armeabi/"/>
-    <source-file src="src/android/jni/armeabi-v7a/libgpequipment.so" target-dir="libs/armeabi-v7a/"/>
-    <source-file src="src/android/jni/x86/libgpequipment.so" target-dir="libs/x86/"/>
-    <source-file src="src/android/aidl/GpService.aidl" target-dir="src/com/gprinter/aidl"/>
+    <source-file src="src/android/libs/gprintersdkv22.jar" target-dir="libs" />
+    <source-file src="src/android/libs/xUtils-2.6.14.jar" target-dir="libs" />
+    <source-file src="src/android/jni/armeabi/libgpequipment.so" target-dir="libs/armeabi/" />
+    <source-file src="src/android/jni/armeabi-v7a/libgpequipment.so" target-dir="libs/armeabi-v7a/" />
+    <source-file src="src/android/jni/x86/libgpequipment.so" target-dir="libs/x86/" />
+    <source-file src="src/android/aidl/GpService.aidl" target-dir="src/com/gprinter/aidl" />
   </platform>
   <platform name="ios">
     <config-file parent="/*" target="config.xml">
